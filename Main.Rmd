@@ -1,0 +1,116 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*.
+
+```{r}
+
+#Upload required libraries
+
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+#Read the Dataset "NZ_Lotto.csv"
+lottoData <- read.csv("NZ_Lotto.csv")
+
+#Cleaning the Data
+str(lottoData)
+summary(lottoData)
+sum(is.na(lottoData))
+
+lottoData <- na.omit(lottoData) #removes empty data
+
+#Convert the Data to process
+
+winningNumbers <- lottoData[,c("Winning.Number.1","X2","X3","X4","X5","X6")] #seperate the winnings numbers from the data set
+colnames(winningNumbers) <- c("1st","2nd","3rd","4th","5th","6th") # change the column names
+
+modifiedNumbers <- pivot_longer(winningNumbers, cols = everything(), names_to = "Winning_Number", values_to = "Ball_Number")
+
+numberFrequency <- modifiedNumbers %>%
+  group_by(Ball_Number) %>%
+  summarise(Count = n()) %>%
+  arrange(desc(Count))
+
+#Print Modified Data
+print(modifiedNumbers)
+print(numberFrequency)
+print(winningNumbers)
+
+#Summary
+
+summary(winningNumbers) #we can see the median mean and range of 50% of numbers drawn for each Nth winning number.
+
+#Plotting Graphs
+
+ggplot(modifiedNumbers, aes(x = Winning_Number, y = Ball_Number, color = Winning_Number)) +
+  geom_jitter(size = 2, alpha = 0.7) +
+  labs(title = "Scatter Plot of NZ_LOTTO Winning Numbers",
+       x = "Winning_Number",
+       y = "Ball_Number") +
+  scale_color_manual(values = rainbow(7)) +
+  theme_minimal()
+
+# scatter plot graph was used to see any patterns or trends.
+
+ggplot(modifiedNumbers, aes(x = 1:nrow(modifiedNumbers), y = Ball_Number, color = Winning_Number)) +
+  geom_point(alpha = 0.7) + 
+  labs(title = "Scatter Plot of All Winning Numbers",
+       x = "",
+       y = "Ball_Number") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+# combined scatter plot is used to see how evenly spread the winning numbers are as a whole.
+
+ggplot(modifiedNumbers, aes(x = Ball_Number, fill = Winning_Number)) +
+  geom_density(alpha = 0.5) +  
+  labs(title = "Density of Winning Numbers",
+       x = "Ball Number",
+       y = "Density") +
+  theme_minimal() + 
+  theme(panel.grid.major.x = element_line(color = "gray"),
+        panel.grid.major.y = element_line(color = "gray"),
+        axis.text.x = element_text(angle = 45, hjust = 1))+
+   scale_x_continuous(breaks = seq(1, max(numberFrequency$Ball_Number), by = 1))
+
+# density graph was used to see the density levels of each Nth winning draw.
+
+ggplot(modifiedNumbers, aes(x = Ball_Number)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +  
+  labs(title = "Density of Combined Winning Numbers",
+       x = "Ball_Number",
+       y = "Density") +
+  theme_minimal()
+
+# combined density graph was used to see the overall distribution of the numbers once again.
+
+ggplot(numberFrequency, aes(x = Ball_Number, y = Count, fill = factor(Ball_Number))) +
+  geom_bar(stat = "identity", color = "black", show.legend = FALSE) + 
+  labs(title = "Frequency of Lotto Numbers",
+       x = "Ball Number",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        panel.grid.major.x = element_line(color = "gray"),
+        panel.grid.major.y = element_line(color = "gray"),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))+
+  scale_x_continuous(breaks = seq(1, max(numberFrequency$Ball_Number), by = 1))
+
+# bar graph to visualize which numbers are drawn more frequently over others.
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
